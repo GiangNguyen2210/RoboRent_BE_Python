@@ -4,7 +4,7 @@ import decimal
 
 from sqlalchemy import BigInteger, Boolean, Column, DateTime, Double, ForeignKeyConstraint, Identity, Index, Integer, Numeric, PrimaryKeyConstraint, String, Table, Text, Time
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-
+#current
 class Base(DeclarativeBase):
     pass
 
