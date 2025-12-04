@@ -31,7 +31,11 @@ jobs:
     name: Restart Azure Web App to Pull Latest Image
     runs-on: ubuntu-latest
     needs: build_and_push
-
+        # 🔥 REQUIRED FOR Azure OpenID Connect Login
+    permissions:
+      id-token: write      # REQUIRED
+      contents: read       # REQUIRED
+      
     steps:
       - name: Azure Login
         uses: azure/login@v2
