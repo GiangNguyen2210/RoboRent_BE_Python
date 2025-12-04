@@ -6,7 +6,7 @@ from app.models.models import Base
 # =======================================
 # DATABASE URL
 # =======================================
-DATABASE_URL = "postgresql+psycopg2://postgres:12345@localhost:5432/RoboRent_BE"
+DATABASE_URL = "postgresql+psycopg2://postgres:Abc%401234@roborentbe.postgres.database.azure.com:5432/RoboRent_BE?sslmode=require"
 
 # =======================================
 # SQLALCHEMY ENGINE
