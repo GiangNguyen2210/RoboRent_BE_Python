@@ -1,4 +1,4 @@
-# 1. Base image: Python 3.10 on Debian (manylinux wheels work well here)
+# 1. Base image: Python 3.10 on Debian
 FROM python:3.10-slim
 
 # 2. Environment settings
@@ -20,19 +20,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # 4. Workdir
 WORKDIR /app
 
-# 5. Install Python deps into a venv
+# 5. Install Python deps into venv
 COPY requirements.txt .
-
 RUN python -m venv /opt/venv && \
     . /opt/venv/bin/activate && \
     pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# Use venv by default
 ENV PATH="/opt/venv/bin:$PATH"
 
 # 6. Pre-download InsightFace model
 RUN python3 - << 'PY'
-FROM insightface.app import FaceAnalysis
+from insightface.app import FaceAnalysis
 app = FaceAnalysis(name="buffalo_l")
 app.prepare(ctx_id=0, det_size=(640, 640))
 PY
@@ -49,5 +49,5 @@ COPY . .
 # 9. Expose port
 EXPOSE 8000
 
-# 10. Start with Gunicorn + Uvicorn worker
+# 10. Start gunicorn server
 CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "app.main:app"]
