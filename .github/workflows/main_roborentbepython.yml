@@ -35,7 +35,7 @@ jobs:
     permissions:
       id-token: write      # REQUIRED
       contents: read       # REQUIRED
-      
+
     steps:
       - name: Azure Login
         uses: azure/login@v2
@@ -48,4 +48,4 @@ jobs:
         run: |
           az webapp restart \
             --name RoboRentPython2 \
-            --resource-group RoboRentPython2_group
+            --resource-group RoboRent_BE_Python
