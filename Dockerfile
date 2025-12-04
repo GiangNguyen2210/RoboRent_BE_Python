@@ -9,7 +9,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_DEFAULT_TIMEOUT=100 \
     INSIGHTFACE_HOME=/models/insightface
 
-# 3. System dependencies for OpenCV, EasyOCR, InsightFace, Postgres
+# 3. System dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libgl1 \
@@ -28,10 +28,9 @@ RUN python -m venv /opt/venv && \
     pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Make sure venv is used by default
 ENV PATH="/opt/venv/bin:$PATH"
 
-# 6. Pre-download InsightFace model so first request is fast
+# 6. Pre-download InsightFace model
 RUN python3 - << 'PY'
 from insightface.app import FaceAnalysis
 
@@ -39,9 +38,8 @@ app = FaceAnalysis(name="buffalo_l")
 app.prepare(ctx_id=0, det_size=(640, 640))
 PY
 
-
-# 7. (Optional) Pre-download EasyOCR models
-RUN python - << 'PY'
+# 7. Pre-download EasyOCR models
+RUN python3 - << 'PY'
 import easyocr
 easyocr.Reader(['vi', 'en'], gpu=False)
 PY
@@ -49,9 +47,8 @@ PY
 # 8. Copy source code
 COPY . .
 
-# 9. Expose port (FastAPI will run on 8000)
+# 9. Expose port
 EXPOSE 8000
 
 # 10. Start with Gunicorn + Uvicorn worker
-# NOTE: "app.main:app" assumes your FastAPI instance is `app` inside app/main.py
 CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "app.main:app"]
