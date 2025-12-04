@@ -31,12 +31,14 @@ RUN python -m venv /opt/venv && \
 # Make sure venv is used by default
 ENV PATH="/opt/venv/bin:$PATH"
 
-# 6. (Optional) Pre-download InsightFace model so first request is fast
-RUN python - << 'PY'
+# 6. Pre-download InsightFace model so first request is fast
+RUN python3 - << 'PY'
 from insightface.app import FaceAnalysis
+
 app = FaceAnalysis(name="buffalo_l")
 app.prepare(ctx_id=0, det_size=(640, 640))
 PY
+
 
 # 7. (Optional) Pre-download EasyOCR models
 RUN python - << 'PY'
