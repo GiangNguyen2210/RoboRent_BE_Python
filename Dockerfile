@@ -32,7 +32,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # 6. Pre-download InsightFace model
 RUN python3 - << 'PY'
-FROM insightface.app import FaceAnalysis
+from insightface.app import FaceAnalysis
 app = FaceAnalysis(name="buffalo_l")
 app.prepare(ctx_id=0, det_size=(640, 640))
 PY
