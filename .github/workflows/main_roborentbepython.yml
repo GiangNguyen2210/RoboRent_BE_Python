@@ -28,7 +28,7 @@ jobs:
         run: docker push giangnguyen2210/roborent-api:latest
 
   deploy:
-    name: Deploy to Azure Web App
+    name: Restart Azure Web App to Pull Latest Image
     runs-on: ubuntu-latest
     needs: build_and_push
 
@@ -40,6 +40,8 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }}
 
-      - name: Restart Azure Web App to Pull New Image
+      - name: Restart Azure Web App
         run: |
-          az webapp restart --name RoboRentPython2 --resource-group <YOUR_RESOURCE_GROUP>
+          az webapp restart \
+            --name RoboRentPython2 \
+            --resource-group RoboRentPython2_group

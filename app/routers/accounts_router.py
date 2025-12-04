@@ -10,4 +10,7 @@ router = APIRouter(
 
 @router.get("/")
 def list_accounts(db: Session = Depends(get_db)):
-    return db.query(models.Accounts).all()
+    return {
+        "success": True,
+        "data": db.query(models.Accounts).all()
+    }
