@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+log/
+logs/
+
+# Cache folders
+.cache/
+pip_cache/
+build/
+dist/
+
+# ML models and downloads (remove if you want to embed models manually)
+datasets/
+data/
+download/
+downloads/
+
+# Node
+node_modules/
+
+# OS trash
+.DS_Store
+Thumbs.db
