@@ -4,11 +4,25 @@ import numpy as np
 import insightface
 from insightface.app import FaceAnalysis
 
+# Lazy-loaded model
+import threading
 
-# Load model 1 lần duy nhất
-app = FaceAnalysis(name="buffalo_l")
-app.prepare(ctx_id=0, det_size=(640, 640))
+_face_model = None
+_face_lock = threading.Lock()
 
+def get_face_model():
+    global _face_model
+    if _face_model is None:
+        with _face_lock:
+            if _face_model is None:
+                from insightface.app import FaceAnalysis
+                model = FaceAnalysis(
+                    name="buffalo_l",
+                    providers=["CPUExecutionProvider"]
+                )
+                model.prepare(ctx_id=0, det_size=(640, 640))
+                _face_model = model
+    return _face_model
 
 def decode_base64_image(base64_str: str):
     header, encoded = base64_str.split(",") if "," in base64_str else ("", base64_str)
@@ -19,7 +33,9 @@ def decode_base64_image(base64_str: str):
 
 
 def extract_embedding(image):
+    app = get_face_model()      # lazy loaded
     faces = app.get(image)
+
     if len(faces) == 0:
         return None
     return faces[0].embedding.tolist()

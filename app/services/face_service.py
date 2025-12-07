@@ -6,10 +6,21 @@ from app.models.models import FaceProfiles, FaceVerifications
 from app.utils.face_insight import decode_base64_image, extract_embedding, compare_embeddings
 import json
 import hashlib
+import threading
 
 THRESHOLD = 0.45
 
-ocr_reader = easyocr.Reader(['vi', 'en'], gpu=False)
+_ocr_reader = None
+_ocr_lock = threading.Lock()
+
+def get_ocr_reader():
+    global _ocr_reader
+    if _ocr_reader is None:
+        with _ocr_lock:
+            if _ocr_reader is None:
+                import easyocr
+                _ocr_reader = easyocr.Reader(["vi", "en"], gpu=False)
+    return _ocr_reader
 
 class FaceService:
 
@@ -22,7 +33,8 @@ class FaceService:
             return None, "Ảnh CCCD không hợp lệ"
 
         # 2) OCR extract text
-        results = ocr_reader.readtext(img, detail=0)
+        reader = get_ocr_reader()
+        results = reader.readtext(img, detail=0)
         ocr_text = " ".join(results).lower()
 
         print("\n================ OCR DEBUG OUTPUT ================")
