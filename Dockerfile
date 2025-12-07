@@ -5,20 +5,27 @@ FROM python:3.10-slim AS builder
 
 WORKDIR /app
 
+# Install system-level dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential libgl1 libglib2.0-0 ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 
-# Install dependencies to a fixed folder `/install`
-RUN pip install --upgrade pip && \
-    pip install --prefix=/install -r requirements.txt --no-cache-dir
+# -------------------------------
+#  FIX #1 — Create virtualenv
+# -------------------------------
+# This guarantees gunicorn, uvicorn, torch, insightface all end up in /venv
+RUN python -m venv /venv && \
+    /venv/bin/pip install --upgrade pip && \
+    /venv/bin/pip install -r requirements.txt --no-cache-dir
 
+# Preload models using virtualenv Python
 COPY preload_insightface.py preload_insightface.py
 COPY preload_easyocr.py preload_easyocr.py
 
-ENV PYTHONPATH=/install/lib/python3.10/site-packages
+ENV PATH="/venv/bin:$PATH"
+ENV PYTHONPATH="/venv/lib/python3.10/site-packages"
 
 RUN python preload_insightface.py
 RUN python preload_easyocr.py
@@ -29,30 +36,34 @@ RUN python preload_easyocr.py
 ###########################
 FROM python:3.10-slim
 
+WORKDIR /app
+
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     INSIGHTFACE_HOME=/root/.insightface/models \
-    PYTHONPATH="/install/lib/python3.10/site-packages" \
-    PATH="/install/bin:$PATH"
+    PATH="/venv/bin:$PATH" \
+    PYTHONPATH="/venv/lib/python3.10/site-packages"
 
-WORKDIR /app
-
+# Install runtime system libs
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 libglib2.0-0 ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy installed packages from builder
-COPY --from=builder /install /install
+# Copy Python virtual environment
+COPY --from=builder /venv /venv
 
-# Copy models
+# Copy model folders
 COPY --from=builder /root/.insightface /root/.insightface
 COPY --from=builder /root/.EasyOCR /root/.EasyOCR
 
-# Copy app
+# Copy application code
 COPY app ./app
 COPY requirements.txt preload_insightface.py preload_easyocr.py ./
 
 
 EXPOSE 8000
 
+# -------------------------------
+# RUN GUNICORN USING VENV
+# -------------------------------
 CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "app.main:app"]
