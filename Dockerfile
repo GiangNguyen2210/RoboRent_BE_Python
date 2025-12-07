@@ -1,5 +1,5 @@
 ###########################
-#   BUILDER (CPU ONLY)
+#   BUILDER
 ###########################
 FROM python:3.10-slim AS builder
 
@@ -11,26 +11,29 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY requirements.txt .
 
-# Install deps WITHOUT CUDA / GPU runtimes
+# Install dependencies to a fixed folder `/install`
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt --no-cache-dir
+    pip install --prefix=/install -r requirements.txt --no-cache-dir
 
 COPY preload_insightface.py preload_insightface.py
 COPY preload_easyocr.py preload_easyocr.py
+
+ENV PYTHONPATH=/install/lib/python3.10/site-packages
 
 RUN python preload_insightface.py
 RUN python preload_easyocr.py
 
 
-############################
-#     RUNTIME IMAGE
-############################
+###########################
+#   RUNTIME
+###########################
 FROM python:3.10-slim
 
-ENV PATH=/root/.local/bin:$PATH \
-    PYTHONUNBUFFERED=1 \
+ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    INSIGHTFACE_HOME=/root/.insightface/models
+    INSIGHTFACE_HOME=/root/.insightface/models \
+    PYTHONPATH="/install/lib/python3.10/site-packages" \
+    PATH="/install/bin:$PATH"
 
 WORKDIR /app
 
@@ -38,17 +41,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 libglib2.0-0 ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy ONLY installed Python packages
-COPY --from=builder /usr/local/lib/python3.10/site-packages \
-                   /usr/local/lib/python3.10/site-packages
+# Copy installed packages from builder
+COPY --from=builder /install /install
 
-# Copy InsightFace & OCR model caches
+# Copy models
 COPY --from=builder /root/.insightface /root/.insightface
 COPY --from=builder /root/.EasyOCR /root/.EasyOCR
 
-# Copy actual application
+# Copy app
 COPY app ./app
 COPY requirements.txt preload_insightface.py preload_easyocr.py ./
+
 
 EXPOSE 8000
 
