@@ -24,13 +24,33 @@ def get_face_model():
                 _face_model = model
     return _face_model
 
+# def decode_base64_image(base64_str: str):
+#     header, encoded = base64_str.split(",") if "," in base64_str else ("", base64_str)
+#     img_data = base64.b64decode(encoded)
+#     np_data = np.frombuffer(img_data, np.uint8)
+#     img = cv2.imdecode(np_data, cv2.IMREAD_COLOR)
+#     return img
 def decode_base64_image(base64_str: str):
-    header, encoded = base64_str.split(",") if "," in base64_str else ("", base64_str)
-    img_data = base64.b64decode(encoded)
-    np_data = np.frombuffer(img_data, np.uint8)
-    img = cv2.imdecode(np_data, cv2.IMREAD_COLOR)
-    return img
+    try:
+        # Remove the header if present
+        if "," in base64_str:
+            _, base64_str = base64_str.split(",", 1)
 
+        # Fix missing padding (base64 length must be divisible by 4)
+        base64_str += "=" * (-len(base64_str) % 4)
+
+        # Decode base64
+        img_data = base64.b64decode(base64_str)
+        np_data = np.frombuffer(img_data, np.uint8)
+
+        # Decode to OpenCV image
+        img = cv2.imdecode(np_data, cv2.IMREAD_COLOR)
+
+        return img
+
+    except Exception as e:
+        print("BASE64 DECODE ERROR:", e)
+        return None
 
 def extract_embedding(image):
     app = get_face_model()      # lazy loaded
